@@ -1,1 +1,0 @@
-../jupynote.py
