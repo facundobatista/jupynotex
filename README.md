@@ -20,26 +20,30 @@ The cells specification can be numbers separated by comma, or ranges using dashe
 
 Examples:
 
+- include the whole *foobar* notebook:
+
+    `\jupynotex{foobar.ipynb}`
+
 - include just the cell #7:
 
-    \jupynotex[7]{sample.ipynb}
+    `\jupynotex[7]{sample.ipynb}`
 
 - include cells 1, 3, and 6, 7, and 8 from the range:
 
-    \jupynotex[1,3,6-8]{sample.ipynb}
+    `\jupynotex[1,3,6-8]{sample.ipynb}`
     
 - include everything up to the fourth cell, and the eigth:
 
-    \jupynotex[-4,8]{whatever.ipynb}
+    `\jupynotex[-4,8]{whatever.ipynb}`
 
 - include the cell number 3, and from 12 to the notebook's end
 
-    \jupynotex[3,12-]{somenote.ipynb}
+    `\jupynotex[3,12-]{somenote.ipynb}`
 
 
-## Example
+## Full Example
 
-Check the example directory in this project.
+Check the `example` directory in this project.
 
 There you will find an example `notebook.ipynb`, an `example.tex` file that includes cells from that notebook in different ways, and a `build` script.
 
