@@ -1,0 +1,3 @@
+#!/bin/sh
+
+xelatex -shell-escape example.tex
