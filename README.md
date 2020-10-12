@@ -57,8 +57,10 @@ You need Python 3 in your system, and the [tcolorbox](https://ctan.org/pkg/tcolo
 
 # Feedback & Development
 
-Please open any issue [here](https://github.com/facundobatista/jupynotex/issues/new).
+Please open any issue or ask any question [here](https://github.com/facundobatista/jupynotex/issues/new).
 
 To run the tests (need to have [fades](https://github.com/pyar/fades) installed):
     
     ./tests/run
+
+This material is subject to the Apache 2.0 license.
