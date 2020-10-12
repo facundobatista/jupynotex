@@ -4,7 +4,37 @@ A Jupyter Notebook to LaTeX translator to include whole or partial notebooks in 
 
 # How To Use?
 
-All you need to do is include the `jupynotex.py` and `jupynotex.sty` files in your LaTeX project, and start using it.
+All you need to do is include the `jupynotex.py` and `jupynotex.sty` files in your LaTeX project, and use the package from your any of your `.tex` files:
+
+    \usepackage{jupynote}
+
+After that, you can include a whole Jupyter Notebook in your file just specifying it's file name:
+
+    \jupynotex{file_name_for_your_notebook.ipynb}
+
+If you do not want to include it completely, you can optionally specify which cells:
+
+    \jupynotex[<which cells>]{sample.ipynb}
+
+The cells specification can be numbers separated by comma, or ranges using dashes (defaulting to first and last if any side is not included).
+
+Examples:
+
+- include just the cell #7:
+
+    \jupynotex[7]{sample.ipynb}
+
+- include cells 1, 3, and 6, 7, and 8 from the range:
+
+    \jupynotex[1,3,6-8]{sample.ipynb}
+    
+- include everything up to the fourth cell, and the eigth:
+
+    \jupynotex[-4,8]{whatever.ipynb}
+
+- include the cell number 3, and from 12 to the notebook's end
+
+    \jupynotex[3,12-]{somenote.ipynb}
 
 
 ## Example
