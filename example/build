@@ -1,3 +1,5 @@
 #!/bin/sh
 
+ln -s ../jupynotex.py .
+ln -s ../jupynotex.sty .
 xelatex -shell-escape example.tex

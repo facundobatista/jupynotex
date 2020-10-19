@@ -2,6 +2,13 @@
 
 A Jupyter Notebook to LaTeX translator to include whole or partial notebooks in your papers.
 
+## Wait, what?
+
+A TeX package that you can use in your project to include Jupyter Notebooks (all of them, or some specific cells) as part of your text. 
+
+It will convert the Jupyter Notebook format to proper LaTeX so it gets included seamless, supporting text, latex, images, etc.
+
+
 # How To Use?
 
 All you need to do is include the `jupynotex.py` and `jupynotex.sty` files in your LaTeX project, and use the package from your any of your `.tex` files:
