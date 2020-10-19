@@ -1,3 +1,7 @@
+# Copyright 2020 Facundo Batista
+# All Rights Reserved
+# Licensed under Apache 2.0
+
 """USAGE: jupynote.py notebook.ipynb cells
 
     cells is a string with which cells to include, separate groups
@@ -47,14 +51,14 @@ class Notebook:
         if content['cell_type'] == 'code':
             result.extend(_verbatimize(source))
         elif content['cell_type'] == 'markdown':
-            # XXX: mayb we could parse this?
+            # XXX: maybe we could parse this?
             result.extend(_verbatimize(source))
         else:
             raise ValueError(
                 "Cell type not supported when processing source: {!r}".format(
                     content['cell_type']))
 
-        return '\n'.join(result)
+        return '\n'.join(result) + '\n'
 
     def _proc_out(self, content):
         """Process the output of a cell."""
@@ -83,7 +87,7 @@ class Notebook:
             else:
                 raise ValueError("Output type not supported in item {!r}".format(item))
 
-        return '\n'.join(result)
+        return '\n'.join(result) + '\n'
 
     def get(self, cell_idx):
         """Return the content from a specific cell in the notebook.
@@ -98,16 +102,23 @@ class Notebook:
 
 def _parse_cells(spec, maxlen):
     """Convert the cells spec to a range of ints."""
+    if not spec:
+        raise ValueError("Empty cells spec not allowed")
+    if set(spec) - set('0123456789-,'):
+        raise ValueError(
+            "Found forbidden characters in cells definition (allowed digits, '-' and ',')")
+
     cells = set()
     groups = spec.split(',')
     for group in groups:
         if '-' in group:
             cfrom, cto = group.split('-')
-            if cfrom == '':
-                cfrom = 1
-            if cto == '':
-                cto = maxlen
-            cells.update(range(int(cfrom), int(cto) + 1))
+            cfrom = 1 if cfrom == '' else int(cfrom)
+            cto = maxlen if cto == '' else int(cto)
+            if cfrom >= cto:
+                raise ValueError(
+                    "Range 'from' need to be smaller than 'to' (got {!r})".format(group))
+            cells.update(range(cfrom, cto + 1))
         else:
             cells.add(int(group))
     cells = sorted(cells)

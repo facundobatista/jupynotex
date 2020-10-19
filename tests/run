@@ -1,0 +1,3 @@
+#!/bin/sh
+
+PYTHONPATH=. fades -d pytest -x pytest -sv "$@"

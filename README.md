@@ -6,7 +6,7 @@ A Jupyter Notebook to LaTeX translator to include whole or partial notebooks in 
 
 All you need to do is include the `jupynotex.py` and `jupynotex.sty` files in your LaTeX project, and use the package from your any of your `.tex` files:
 
-    \usepackage{jupynote}
+    \usepackage{jupynotex}
 
 After that, you can include a whole Jupyter Notebook in your file just specifying it's file name:
 
