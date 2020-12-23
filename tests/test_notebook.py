@@ -52,22 +52,13 @@ def test_source_code(notebook):
     assert src == expected
 
 
-def test_source_markdown(notebook):
+def test_source_markdown_ignored(notebook):
     rawcell = {
         'cell_type': 'markdown',
         'source': ['line1\n', '    line2\n'],
     }
     nb = notebook([rawcell])
-    assert len(nb) == 1
-
-    src, _ = nb.get(1)
-    expected = textwrap.dedent("""\
-        \\begin{verbatim}
-        line1
-            line2
-        \\end{verbatim}
-    """)
-    assert src == expected
+    assert len(nb) == 0
 
 
 def test_output_missing(notebook):

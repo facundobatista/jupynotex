@@ -39,7 +39,8 @@ class Notebook:
         with open(path, 'rt', encoding='utf8') as fh:
             nb_data = json.load(fh)
 
-        self._cells = nb_data['cells']
+        # get all cells excluding markdown ones
+        self._cells = [x for x in nb_data['cells'] if x['cell_type'] != 'markdown']
 
     def __len__(self):
         return len(self._cells)
@@ -49,9 +50,6 @@ class Notebook:
         source = content['source']
         result = []
         if content['cell_type'] == 'code':
-            result.extend(_verbatimize(source))
-        elif content['cell_type'] == 'markdown':
-            # XXX: maybe we could parse this?
             result.extend(_verbatimize(source))
         else:
             raise ValueError(
