@@ -38,10 +38,11 @@ def test_simple_ok(monkeypatch, capsys):
         1: ("test cell content up", "test cell content down"),
     })
     monkeypatch.setattr(jupynotex, 'Notebook', fake_notebook)
+    monkeypatch.setattr(jupynotex, 'FORMAT_OK', 'testformat')
 
     main('boguspath', '1')
     expected = textwrap.dedent("""\
-        \\begin{tcolorbox}[title=Cell {01}]
+        \\begin{tcolorbox}[testformat, title=Cell {01}]
         test cell content up
         \\tcblower
         test cell content down
@@ -55,10 +56,11 @@ def test_simple_only_first(monkeypatch, capsys):
         1: ("test cell content up", ""),
     })
     monkeypatch.setattr(jupynotex, 'Notebook', fake_notebook)
+    monkeypatch.setattr(jupynotex, 'FORMAT_OK', 'testformat')
 
     main('boguspath', '1')
     expected = textwrap.dedent("""\
-        \\begin{tcolorbox}[title=Cell {01}]
+        \\begin{tcolorbox}[testformat, title=Cell {01}]
         test cell content up
         \\end{tcolorbox}
     """)
@@ -70,24 +72,27 @@ def test_simple_error(monkeypatch, capsys):
         1: ValueError("test problem"),
     })
     monkeypatch.setattr(jupynotex, 'Notebook', fake_notebook)
+    monkeypatch.setattr(jupynotex, 'FORMAT_ERROR', 'testformat')
 
     main('boguspath', '1')
 
     # verify the beginning and the end, as the middle part is specific to the environment
     # where the test runs
     expected_ini = [
-        r"\begin{tcolorbox}[colback=red!5!white,colframe=red!75!,title={ERROR when parsing cell 1}]",  # NOQA
+        r"\begin{tcolorbox}[testformat, title={ERROR when parsing cell 1}]",
+        r'\begin{footnotesize}',
         r"\begin{verbatim}",
         r"Traceback (most recent call last):",
     ]
     expected_end = [
         r"ValueError: test problem",
         r"\end{verbatim}",
+        r'\end{footnotesize}',
         r"\end{tcolorbox}",
     ]
     out = [line for line in capsys.readouterr().out.split('\n') if line]
-    assert expected_ini == out[:3]
-    assert expected_end == out[-3:]
+    assert expected_ini == out[:4]
+    assert expected_end == out[-4:]
 
 
 def test_multiple(monkeypatch, capsys):
@@ -96,15 +101,16 @@ def test_multiple(monkeypatch, capsys):
         2: ("test cell content ONLY up", ""),
     })
     monkeypatch.setattr(jupynotex, 'Notebook', fake_notebook)
+    monkeypatch.setattr(jupynotex, 'FORMAT_OK', 'testformat')
 
     main('boguspath', '1-2')
     expected = textwrap.dedent("""\
-        \\begin{tcolorbox}[title=Cell {01}]
+        \\begin{tcolorbox}[testformat, title=Cell {01}]
         test cell content up
         \\tcblower
         test cell content down
         \\end{tcolorbox}
-        \\begin{tcolorbox}[title=Cell {02}]
+        \\begin{tcolorbox}[testformat, title=Cell {02}]
         test cell content ONLY up
         \\end{tcolorbox}
     """)

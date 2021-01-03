@@ -14,13 +14,29 @@ import sys
 import tempfile
 import traceback
 
+# basic verbatim start/end
+VERBATIM_BEGIN = [r"\begin{footnotesize}", r"\begin{verbatim}"]
+VERBATIM_END = [r"\end{verbatim}", r"\end{footnotesize}"]
+
+# highlighers for different languages (block beginning and ending)
+HIGHLIGHTERS = {
+    'python': ([r'\begin{minted}[fontsize=\footnotesize]{python}'], [r'\end{minted}']),
+    None: (VERBATIM_BEGIN, VERBATIM_END),
+}
+
+FORMAT_ERROR = r"colback=red!5!white,colframe=red!75!"
+FORMAT_OK = (
+    r"coltitle=red!75!black, colbacktitle=black!10!white, "
+    r"halign title=right, fonttitle=\sffamily\mdseries\scshape\footnotesize")
+
 
 def _verbatimize(lines):
     """Wrap a series of lines around a verbatim indication."""
-    result = [r"\begin{verbatim}"]
+    result = []
+    result.extend(VERBATIM_BEGIN)
     for line in lines:
         result.append(line.rstrip())
-    result.append(r"\end{verbatim}")
+    result.extend(VERBATIM_END)
     return result
 
 
@@ -39,6 +55,10 @@ class Notebook:
         with open(path, 'rt', encoding='utf8') as fh:
             nb_data = json.load(fh)
 
+        # get the languaje, to highlight
+        lang = nb_data['metadata']['language_info']['name']
+        self._highlight_delimiters = HIGHLIGHTERS.get(lang, HIGHLIGHTERS[None])
+
         # get all cells excluding markdown ones
         self._cells = [x for x in nb_data['cells'] if x['cell_type'] != 'markdown']
 
@@ -50,7 +70,10 @@ class Notebook:
         source = content['source']
         result = []
         if content['cell_type'] == 'code':
-            result.extend(_verbatimize(source))
+            begin, end = self._highlight_delimiters
+            result.extend(begin)
+            result.extend(line.rstrip() for line in source)
+            result.extend(end)
         else:
             raise ValueError(
                 "Cell type not supported when processing source: {!r}".format(
@@ -140,15 +163,13 @@ def main(notebook_path, cells_spec):
             src, out = nb.get(cell)
         except Exception:
             title = "ERROR when parsing cell {}".format(cell)
-            print(
-                r"\begin{{tcolorbox}}"
-                r"[colback=red!5!white,colframe=red!75!,title={{{}}}]".format(title))
+            print(r"\begin{{tcolorbox}}[{}, title={{{}}}]".format(FORMAT_ERROR, title))
             tb = traceback.format_exc()
             print('\n'.join(_verbatimize(tb.split('\n'))))
             print(r"\end{tcolorbox}")
             continue
 
-        print(r"\begin{{tcolorbox}}[title=Cell {{{:02d}}}]".format(cell))
+        print(r"\begin{{tcolorbox}}[{}, title=Cell {{{:02d}}}]".format(FORMAT_OK, cell))
         print(src)
         if out:
             print(r"\tcblower")

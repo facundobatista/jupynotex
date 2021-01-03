@@ -12,16 +12,22 @@ import textwrap
 
 import pytest
 
-from jupynotex import Notebook
+from jupynotex import Notebook, HIGHLIGHTERS
 
 
 @pytest.fixture
 def notebook():
     _, name = tempfile.mkstemp()
 
-    def _f(cells):
+    def _f(cells, lang_name=None):
+        fake_nb = {
+            'cells': cells,
+            'metadata': {
+                'language_info': {'name': lang_name},
+            },
+        }
         with open(name, 'wt', encoding='utf8') as fh:
-            json.dump({'cells': cells}, fh)
+            json.dump(fake_nb, fh)
 
         return Notebook(name)
 
@@ -34,7 +40,7 @@ def test_empty(notebook):
     assert len(nb) == 0
 
 
-def test_source_code(notebook):
+def test_source_code_simple(notebook):
     rawcell = {
         'cell_type': 'code',
         'source': ['line1\n', '    line2\n'],
@@ -44,10 +50,31 @@ def test_source_code(notebook):
 
     src, _ = nb.get(1)
     expected = textwrap.dedent("""\
+        \\begin{footnotesize}
         \\begin{verbatim}
         line1
             line2
         \\end{verbatim}
+        \\end{footnotesize}
+    """)
+    assert src == expected
+
+
+def test_source_code_highlighted(notebook, monkeypatch):
+    monkeypatch.setitem(HIGHLIGHTERS, 'testlang', (['highlight start'], ['highlight end']))
+    rawcell = {
+        'cell_type': 'code',
+        'source': ['line1\n', '    line2\n'],
+    }
+    nb = notebook([rawcell], lang_name='testlang')
+    assert len(nb) == 1
+
+    src, _ = nb.get(1)
+    expected = textwrap.dedent("""\
+        highlight start
+        line1
+            line2
+        highlight end
     """)
     assert src == expected
 
@@ -91,10 +118,12 @@ def test_output_simple_executeresult_plain(notebook):
 
     _, out = nb.get(1)
     expected = textwrap.dedent("""\
+        \\begin{footnotesize}
         \\begin{verbatim}
         default always present
         line2
         \\end{verbatim}
+        \\end{footnotesize}
     """)
     assert out == expected
 
@@ -165,10 +194,12 @@ def test_output_simple_stream(notebook):
 
     _, out = nb.get(1)
     expected = textwrap.dedent("""\
+        \\begin{footnotesize}
         \\begin{verbatim}
         some text line
         text 2
         \\end{verbatim}
+        \\end{footnotesize}
     """)
     assert out == expected
 
@@ -220,9 +251,11 @@ def test_output_multiple(notebook):
     expected = textwrap.dedent("""\
         some latex line
         latex 2
+        \\begin{footnotesize}
         \\begin{verbatim}
         some text line
         text 2
         \\end{verbatim}
+        \\end{footnotesize}
     """)
     assert out == expected

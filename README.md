@@ -59,7 +59,11 @@ Play with it. Enjoy.
 
 # Dependencies
 
-You need Python 3 in your system, and the [tcolorbox](https://ctan.org/pkg/tcolorbox) module in your LaTeX toolbox.
+You need Python 3 in your system, and the following modules in your LaTeX toolbox:
+
+- [tcolorbox](https://ctan.org/pkg/tcolorbox)
+
+- [minted](https://www.ctan.org/pkg/minted)
 
 
 # Feedback & Development
