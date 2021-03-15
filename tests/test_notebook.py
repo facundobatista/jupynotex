@@ -1,4 +1,4 @@
-# Copyright 2020 Facundo Batista
+# Copyright 2020-2021 Facundo Batista
 # All Rights Reserved
 # Licensed under Apache 2.0
 
@@ -255,6 +255,47 @@ def test_output_multiple(notebook):
         \\begin{verbatim}
         some text line
         text 2
+        \\end{verbatim}
+        \\end{footnotesize}
+    """)
+    assert out == expected
+
+
+def test_output_error(notebook):
+    rawcell = {
+        'cell_type': 'code',
+        'source': [],
+        'outputs': [
+            {
+                'ename': 'ValueError',
+                'evalue': 'not enough values to unpack (expected 3, got 2)',
+                'output_type': 'error',
+                'traceback': [
+                    '\x1b[0;31m------------------------------------------------------\x1b[0m',
+                    '\x1b[0;31mValueError\x1b[0m           Traceback (most recent call last)',
+                    ('\x1b[0;32m<ipython-input-8-9dbc59cfd6c6>\x1b[0m in '
+                        '\x1b[1;36m<module>\x1b[0;34m\x1b[0m\n\x1b[0;32m----> '
+                        '1\x1b[0;31m \x1b[0ma\x1b[0m\x1b[0;34m,\x1b[0m '
+                        '\x1b[0mb\x1b[0m\x1b[0;34m,\x1b[0m \x1b[0mc\x1b[0m '
+                        '\x1b[1;34m=\x1b[0m \x1b[0;36m1\x1b[0m\x1b[0;34m,\x1b[0m '
+                        '\x1b[0;36m2\x1b[0m\x1b[0;34m\x1b[0m\x1b[0;34m\x1b[0m\x1b[0m\n\x1b[0m'),
+                    '\x1b[0;31mValueError\x1b[0m: not enough values to unpack (expected 3, got 2)',
+                ]
+            },
+        ],
+    }
+    nb = notebook([rawcell])
+    assert len(nb) == 1
+
+    _, out = nb.get(1)
+    expected = textwrap.dedent("""\
+        \\begin{footnotesize}
+        \\begin{verbatim}
+        ValueError           Traceback (most recent call last)
+        <ipython-input-8-9dbc59cfd6c6> in <module>
+        ----> 1 a, b, c = 1, 2
+
+        ValueError: not enough values to unpack (expected 3, got 2)
         \\end{verbatim}
         \\end{footnotesize}
     """)

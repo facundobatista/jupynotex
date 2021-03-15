@@ -1,4 +1,4 @@
-# Copyright 2020 Facundo Batista
+# Copyright 2020-2021  Facundo Batista
 # All Rights Reserved
 # Licensed under Apache 2.0
 
@@ -10,6 +10,7 @@
 
 import base64
 import json
+import re
 import sys
 import tempfile
 import traceback
@@ -105,6 +106,18 @@ class Notebook:
                 data = item['data']
                 fname = _save_content(data['image/png'])
                 result.append(r"\includegraphics{{{}}}".format(fname))
+            elif output_type == 'error':
+                raw_traceback = item['traceback']
+                tback_lines = []
+                for raw_line in raw_traceback:
+                    internal_lines = raw_line.split('\n')
+                    for line in internal_lines:
+                        line = re.sub(r"\x1b\[\d.*?m", "", line)  # sanitize
+                        if set(line) == {'-'}:
+                            # ignore separator, as our graphical box already has one
+                            continue
+                        tback_lines.append(line)
+                result.extend(_verbatimize(tback_lines))
             else:
                 raise ValueError("Output type not supported in item {!r}".format(item))
 
