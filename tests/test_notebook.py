@@ -172,7 +172,7 @@ def test_output_simple_executeresult_image(notebook):
     assert len(nb) == 1
 
     _, out = nb.get(1)
-    m = re.match(r'\\includegraphics\{(.+)\}\n', out)
+    m = re.match(r'\\includegraphics\[width=1\\textwidth\]\{(.+)\}\n', out)
     assert m
     (fpath,) = m.groups()
     assert pathlib.Path(fpath).read_bytes() == raw_content
@@ -222,7 +222,7 @@ def test_output_simple_display_data(notebook):
     assert len(nb) == 1
 
     _, out = nb.get(1)
-    m = re.match(r'\\includegraphics\{(.+)\}\n', out)
+    m = re.match(r'\\includegraphics\[width=1\\textwidth\]\{(.+)\}\n', out)
     assert m
     (fpath,) = m.groups()
     assert pathlib.Path(fpath).read_bytes() == raw_content

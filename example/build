@@ -2,4 +2,4 @@
 
 ln -s ../jupynotex.py .
 ln -s ../jupynotex.sty .
-xelatex -shell-escape example.tex
+xelatex -shell-escape $1

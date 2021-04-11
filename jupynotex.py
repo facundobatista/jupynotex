@@ -15,6 +15,7 @@ import sys
 import tempfile
 import traceback
 
+
 # basic verbatim start/end
 VERBATIM_BEGIN = [r"\begin{footnotesize}", r"\begin{verbatim}"]
 VERBATIM_END = [r"\end{verbatim}", r"\end{footnotesize}"]
@@ -41,12 +42,13 @@ def _verbatimize(lines):
     return result
 
 
-def _save_content(data):
-    """Save the received b64encoded data to a temp file."""
+def _include_image_content(data):
+    """Save the received b64encoded data to a temp file and build latex to include it."""
     _, fname = tempfile.mkstemp(suffix='.png')
     with open(fname, 'wb') as fh:
         fh.write(base64.b64decode(data))
-    return fname
+
+    return r"\includegraphics[width=1\textwidth]{{{}}}".format(fname)
 
 
 class Notebook:
@@ -94,8 +96,7 @@ class Notebook:
             if output_type == 'execute_result':
                 data = item['data']
                 if 'image/png' in data:
-                    fname = _save_content(data['image/png'])
-                    result.append(r"\includegraphics{{{}}}".format(fname))
+                    result.append(_include_image_content(data['image/png']))
                 elif 'text/latex' in data:
                     result.extend(data["text/latex"])
                 else:
@@ -104,8 +105,7 @@ class Notebook:
                 result.extend(_verbatimize(x.rstrip() for x in item["text"]))
             elif output_type == 'display_data':
                 data = item['data']
-                fname = _save_content(data['image/png'])
-                result.append(r"\includegraphics{{{}}}".format(fname))
+                result.append(_include_image_content(data['image/png']))
             elif output_type == 'error':
                 raw_traceback = item['traceback']
                 tback_lines = []
