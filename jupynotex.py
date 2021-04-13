@@ -11,6 +11,7 @@
 import base64
 import json
 import re
+import subprocess
 import sys
 import tempfile
 import traceback
@@ -42,11 +43,40 @@ def _verbatimize(lines):
     return result
 
 
-def _include_image_content(data):
-    """Save the received b64encoded data to a temp file and build latex to include it."""
+def _process_png(image_data):
+    """Process a PNG: just save the received b64encoded data to a temp file."""
     _, fname = tempfile.mkstemp(suffix='.png')
     with open(fname, 'wb') as fh:
-        fh.write(base64.b64decode(data))
+        fh.write(base64.b64decode(image_data))
+    return fname
+
+
+def _process_svg(image_data):
+    """Process a SVG: save the data, transform to PDF, and then use that."""
+    _, svg_fname = tempfile.mkstemp(suffix='.svg')
+    _, pdf_fname = tempfile.mkstemp(suffix='.pdf')
+    raw_svg = ''.join(image_data).encode('utf8')
+    with open(svg_fname, 'wb') as fh:
+        fh.write(raw_svg)
+
+    cmd = ['inkscape', '--export-text-to-path', '--export-pdf={}'.format(pdf_fname), svg_fname]
+    subprocess.run(cmd)
+
+    return pdf_fname
+
+
+def _include_image_content(data):
+    """Save the  and build latex to include it."""
+    image_processors = [
+        ('image/png', _process_png),
+        ('image/svg+xml', _process_svg),
+    ]
+    for mimetype, function in image_processors:
+        if mimetype in data:
+            fname = function(data[mimetype])
+            break
+    else:
+        raise ValueError("Image type not supported: {}".format(data.keys()))
 
     return r"\includegraphics[width=1\textwidth]{{{}}}".format(fname)
 
@@ -95,8 +125,8 @@ class Notebook:
             output_type = item['output_type']
             if output_type == 'execute_result':
                 data = item['data']
-                if 'image/png' in data:
-                    result.append(_include_image_content(data['image/png']))
+                if 'image/png' in data or 'image/svg+xml' in data:
+                    result.append(_include_image_content(data))
                 elif 'text/latex' in data:
                     result.extend(data["text/latex"])
                 else:
@@ -104,8 +134,7 @@ class Notebook:
             elif output_type == 'stream':
                 result.extend(_verbatimize(x.rstrip() for x in item["text"]))
             elif output_type == 'display_data':
-                data = item['data']
-                result.append(_include_image_content(data['image/png']))
+                result.append(_include_image_content(item['data']))
             elif output_type == 'error':
                 raw_traceback = item['traceback']
                 tback_lines = []

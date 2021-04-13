@@ -9,6 +9,7 @@ import pathlib
 import re
 import tempfile
 import textwrap
+from unittest.mock import patch
 
 import pytest
 
@@ -153,7 +154,7 @@ def test_output_simple_executeresult_latex(notebook):
     assert out == expected
 
 
-def test_output_simple_executeresult_image(notebook):
+def test_output_simple_executeresult_png(notebook):
     raw_content = b"\x01\x02 asdlklda3wudghlaskgdlask"
     rawcell = {
         'cell_type': 'code',
@@ -176,6 +177,46 @@ def test_output_simple_executeresult_image(notebook):
     assert m
     (fpath,) = m.groups()
     assert pathlib.Path(fpath).read_bytes() == raw_content
+
+
+def test_output_simple_executeresult_svg(notebook):
+    rawcell = {
+        'cell_type': 'code',
+        'source': [],
+        'outputs': [
+            {
+                'output_type': 'display_data',
+                'data': {
+                    'image/svg+xml': ['xml svg stuff\n', 'more svg stuff\n'],
+                },
+            },
+        ],
+    }
+    nb = notebook([rawcell])
+    assert len(nb) == 1
+    dst_fpath = None
+
+    def fake_run(cmd):
+        """Simulate the subprocess run, but leaving traces for the test."""
+        nonlocal dst_fpath
+
+        assert cmd[0] == 'inkscape'
+        assert cmd[1] == '--export-text-to-path'
+        assert cmd[2].startswith('--export-pdf=')
+        dst_fpath = cmd[2][len('--export-pdf='):]
+        src_fpath = cmd[3]
+
+        # check that stuff in the source makes sense
+        with open(src_fpath, 'rb') as fh:
+            content = fh.read()
+        assert content == b'xml svg stuff\nmore svg stuff\n'
+
+    with patch('subprocess.run', fake_run):
+        _, out = nb.get(1)
+    m = re.match(r'\\includegraphics\[width=1\\textwidth\]\{(.+)\}\n', out)
+    assert m
+    (fpath,) = m.groups()
+    assert fpath == dst_fpath
 
 
 def test_output_simple_stream(notebook):

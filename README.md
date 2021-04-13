@@ -52,9 +52,35 @@ Examples:
 
 Check the `example` directory in this project.
 
-There you will find an example `notebook.ipynb`, an `example.tex` file that includes cells from that notebook in different ways, and a `build` script.
+There you will find different notebook examples and `.tex` files using them. Also there's a build script to easily run on any of the examples, like:
+
+    ./build cell_ranges.tex
 
 Play with it. Enjoy.
+
+
+# Supported cell types
+
+Jupyter has several types of cells, `jupynotex` supports most of those. If you find one that is not supported, please open an issue with an example.
+
+In any case, only the "code" cells are included when processing a notebook (no markdown titles, for example, to make it easy for the developer to find the numbers of cells to include).
+
+Supported cell types in the output:
+
+- `execute_result`: this may have multiple types of information inside; if an image is present, it will be included, otherwise if a latex output is present it will included (directly, so the latex is really parsed later by the LaTeX system, else the plain text will be included (verbatim).
+
+- `stream`: the different text lines will be included (verbatim)
+                result.extend(_verbatimize(x.rstrip() for x in item["text"]))
+
+- `display_data`: the image will be included
+
+- `error`: in this case the Traceback will be parsed, sanitized and included in the output keeping its structure (verbatim)
+
+Two type of images are currently supported (for the case in `execute_result` or `display_data` cell type:
+
+- PNG: used directly
+
+- SVG: converted to PDF (need to have `inkscape` present in the system) and included that
 
 
 # Dependencies
@@ -64,6 +90,8 @@ You need Python 3 in your system, and the following modules in your LaTeX toolbo
 - [tcolorbox](https://ctan.org/pkg/tcolorbox)
 
 - [minted](https://www.ctan.org/pkg/minted)
+
+To support SVG images in the notebook, [inkscape](https://inkscape.org/) needs to be installed and in the system's PATH.
 
 
 # Feedback & Development
