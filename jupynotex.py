@@ -125,10 +125,10 @@ class Notebook:
             output_type = item['output_type']
             if output_type == 'execute_result':
                 data = item['data']
-                if 'image/png' in data or 'image/svg+xml' in data:
-                    result.append(_include_image_content(data))
-                elif 'text/latex' in data:
+                if 'text/latex' in data:
                     result.extend(data["text/latex"])
+                elif 'image/png' in data or 'image/svg+xml' in data:
+                    result.append(_include_image_content(data))
                 else:
                     result.extend(_verbatimize(data["text/plain"]))
             elif output_type == 'stream':

@@ -154,6 +154,33 @@ def test_output_simple_executeresult_latex(notebook):
     assert out == expected
 
 
+def test_output_simple_executeresult_latex_and_png(notebook):
+    """It should prioritize latex."""
+    rawcell = {
+        'cell_type': 'code',
+        'source': [],
+        'outputs': [
+            {
+                'output_type': 'execute_result',
+                'data': {
+                    'image/png': base64.b64encode(b"\x01\x02 asdudghlaskgdlask").decode('ascii'),
+                    'text/latex': ['some latex line', 'latex 2'],
+                    'text/plain': ['default always present'],
+                },
+            },
+        ],
+    }
+    nb = notebook([rawcell])
+    assert len(nb) == 1
+
+    _, out = nb.get(1)
+    expected = textwrap.dedent("""\
+        some latex line
+        latex 2
+    """)
+    assert out == expected
+
+
 def test_output_simple_executeresult_png(notebook):
     raw_content = b"\x01\x02 asdlklda3wudghlaskgdlask"
     rawcell = {
