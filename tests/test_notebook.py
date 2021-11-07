@@ -18,7 +18,8 @@ from jupynotex import Notebook, HIGHLIGHTERS
 
 @pytest.fixture
 def notebook():
-    _, name = tempfile.mkstemp()
+    fd, name = tempfile.mkstemp()
+    os.close(fd)
 
     def _f(cells, lang_name=None):
         fake_nb = {
