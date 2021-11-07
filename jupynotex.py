@@ -78,7 +78,8 @@ def _include_image_content(data):
     else:
         raise ValueError("Image type not supported: {}".format(data.keys()))
 
-    return r"\includegraphics[width=1\textwidth]{{{}}}".format(fname)
+    fname_no_backslashes = fname.replace("\\", "/")  # do not leave backslashes in Windows
+    return r"\includegraphics[width=1\textwidth]{{{}}}".format(fname_no_backslashes)
 
 
 class Notebook:

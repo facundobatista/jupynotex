@@ -204,6 +204,7 @@ def test_output_simple_executeresult_png(notebook):
     m = re.match(r'\\includegraphics\[width=1\\textwidth\]\{(.+)\}\n', out)
     assert m
     (fpath,) = m.groups()
+    assert "\\" not in fpath  # no backslashes in Windows
     assert pathlib.Path(fpath).read_bytes() == raw_content
 
 
@@ -244,7 +245,8 @@ def test_output_simple_executeresult_svg(notebook):
     m = re.match(r'\\includegraphics\[width=1\\textwidth\]\{(.+)\}\n', out)
     assert m
     (fpath,) = m.groups()
-    assert fpath == dst_fpath
+    assert "\\" not in fpath  # no backslashes in Windows
+    assert pathlib.Path(fpath) == pathlib.Path(dst_fpath)
 
 
 def test_output_simple_stream(notebook):
