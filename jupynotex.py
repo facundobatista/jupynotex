@@ -33,12 +33,15 @@ FORMAT_OK = (
     r"halign title=right, fonttitle=\sffamily\mdseries\scshape\footnotesize")
 
 
-def _verbatimize(lines):
+def _process_plain_text(lines):
     """Wrap a series of lines around a verbatim indication."""
     result = []
     result.extend(VERBATIM_BEGIN)
     for line in lines:
-        result.append(line.rstrip())
+        line = line.strip()
+        # clean color escape codes (\u001b plus \[Nm where N are one or more digits)
+        line = re.sub(r"\x1b\[[\d;]+m", "", line)
+        result.append(line)
     result.extend(VERBATIM_END)
     return result
 
@@ -65,21 +68,42 @@ def _process_svg(image_data):
     return pdf_fname
 
 
-def _include_image_content(data):
-    """Save the  and build latex to include it."""
-    image_processors = [
-        ('image/png', _process_png),
-        ('image/svg+xml', _process_svg),
-    ]
-    for mimetype, function in image_processors:
+def _include_graphics(fname):
+    """Wrap a filename in an includegraphics structure."""
+    fname_no_backslashes = fname.replace("\\", "/")  # do not leave backslashes in Windows
+    return r"\includegraphics[width=1\textwidth]{{{}}}".format(fname_no_backslashes)
+
+
+def _listwrap(item):
+    """Wrap an item in a list for processors that return that single item."""
+    return [item]
+
+
+# mimetype and list of functions to apply; order is important here as we want to
+# prioritize getting some mimetypes over others when multiple are present
+PROCESSORS = [
+    ('text/latex',),
+    ('image/svg+xml', _process_svg, _include_graphics, _listwrap),
+    ('image/png', _process_png, _include_graphics, _listwrap),
+    ('text/plain', _process_plain_text),
+]
+
+
+def _get_item_data(item):
+    """Extract item information using different processors."""
+
+    data = item['data']
+    for mimetype, *functions in PROCESSORS:
         if mimetype in data:
-            fname = function(data[mimetype])
+            content = data[mimetype]
             break
     else:
         raise ValueError("Image type not supported: {}".format(data.keys()))
 
-    fname_no_backslashes = fname.replace("\\", "/")  # do not leave backslashes in Windows
-    return r"\includegraphics[width=1\textwidth]{{{}}}".format(fname_no_backslashes)
+    for func in functions:
+        content = func(content)
+
+    return content
 
 
 class Notebook:
@@ -124,18 +148,10 @@ class Notebook:
         result = []
         for item in outputs:
             output_type = item['output_type']
-            if output_type == 'execute_result':
-                data = item['data']
-                if 'text/latex' in data:
-                    result.extend(data["text/latex"])
-                elif 'image/png' in data or 'image/svg+xml' in data:
-                    result.append(_include_image_content(data))
-                else:
-                    result.extend(_verbatimize(data["text/plain"]))
+            if output_type in ('execute_result', 'display_data'):
+                more_content = _get_item_data(item)
             elif output_type == 'stream':
-                result.extend(_verbatimize(x.rstrip() for x in item["text"]))
-            elif output_type == 'display_data':
-                result.append(_include_image_content(item['data']))
+                more_content = _process_plain_text(item["text"])
             elif output_type == 'error':
                 raw_traceback = item['traceback']
                 tback_lines = []
@@ -147,9 +163,10 @@ class Notebook:
                             # ignore separator, as our graphical box already has one
                             continue
                         tback_lines.append(line)
-                result.extend(_verbatimize(tback_lines))
+                more_content = _process_plain_text(tback_lines)
             else:
                 raise ValueError("Output type not supported in item {!r}".format(item))
+            result.extend(more_content)
 
         return '\n'.join(result) + '\n'
 
@@ -208,7 +225,7 @@ def main(notebook_path, cells_spec):
             title = "ERROR when parsing cell {}".format(cell)
             print(r"\begin{{tcolorbox}}[{}, title={{{}}}]".format(FORMAT_ERROR, title))
             tb = traceback.format_exc()
-            print('\n'.join(_verbatimize(tb.split('\n'))))
+            print('\n'.join(_process_plain_text(tb.split('\n'))))
             print(r"\end{tcolorbox}")
             continue
 

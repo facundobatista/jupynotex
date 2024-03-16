@@ -202,7 +202,7 @@ def test_output_simple_executeresult_png(notebook):
 
     _, out = nb.get(1)
     m = re.match(r'\\includegraphics\[width=1\\textwidth\]\{(.+)\}\n', out)
-    assert m
+    assert m, repr(out)
     (fpath,) = m.groups()
     assert "\\" not in fpath  # no backslashes in Windows
     assert pathlib.Path(fpath).read_bytes() == raw_content
@@ -275,7 +275,7 @@ def test_output_simple_stream(notebook):
     assert out == expected
 
 
-def test_output_simple_display_data(notebook):
+def test_output_simple_display_data_image(notebook):
     raw_content = b"\x01\x02 asdlklda3wudghlaskgdlask"
     rawcell = {
         'cell_type': 'code',
@@ -294,9 +294,37 @@ def test_output_simple_display_data(notebook):
 
     _, out = nb.get(1)
     m = re.match(r'\\includegraphics\[width=1\\textwidth\]\{(.+)\}\n', out)
-    assert m
+    assert m, repr(out)
     (fpath,) = m.groups()
     assert pathlib.Path(fpath).read_bytes() == raw_content
+
+
+def test_output_simple_display_data_plain(notebook):
+    rawcell = {
+        'cell_type': 'code',
+        'source': [],
+        'outputs': [
+            {
+                'output_type': 'display_data',
+                'data': {
+                    'text/plain': ['default always present', 'line2'],
+                },
+            },
+        ],
+    }
+    nb = notebook([rawcell])
+    assert len(nb) == 1
+
+    _, out = nb.get(1)
+    expected = textwrap.dedent("""\
+        \\begin{footnotesize}
+        \\begin{verbatim}
+        default always present
+        line2
+        \\end{verbatim}
+        \\end{footnotesize}
+    """)
+    assert out == expected
 
 
 def test_output_multiple(notebook):
@@ -367,6 +395,37 @@ def test_output_error(notebook):
         ----> 1 a, b, c = 1, 2
 
         ValueError: not enough values to unpack (expected 3, got 2)
+        \\end{verbatim}
+        \\end{footnotesize}
+    """)
+    assert out == expected
+
+
+def test_output_with_control_codes(notebook):
+    rawcell = {
+        'cell_type': 'code',
+        'source': [],
+        'outputs': [
+            {
+                'output_type': 'stream',
+                'text': [
+                    "\x1b[1mtest\x1b[0m",  # simple
+                    "\x1b[1m79/79\x1b[0m \x1b[32mextra\x1b[0m\x1b[37m\x1b[0m-",  # multiple
+                    "\x1b[38;5;33mfoo\x1b[0m",  # more complex code
+                ],
+            },
+        ],
+    }
+    nb = notebook([rawcell])
+    assert len(nb) == 1
+
+    _, out = nb.get(1)
+    expected = textwrap.dedent("""\
+        \\begin{footnotesize}
+        \\begin{verbatim}
+        test
+        79/79 extra-
+        foo
         \\end{verbatim}
         \\end{footnotesize}
     """)
