@@ -13,15 +13,15 @@ It will convert the Jupyter Notebook format to proper LaTeX so it gets included 
 
 All you need to do is include the `jupynotex.py` and `jupynotex.sty` files in your LaTeX project, and use the package from your any of your `.tex` files:
 
-    \usepackage{jupynotex}
+    `\usepackage{jupynotex}`
 
 After that, you can include a whole Jupyter Notebook in your file just specifying it's file name:
 
-    \jupynotex{file_name_for_your_notebook.ipynb}
+    `\jupynotex{file_name_for_your_notebook.ipynb}`
 
 If you do not want to include it completely, you can optionally specify which cells:
 
-    \jupynotex[<which cells>]{sample.ipynb}
+    `\jupynotex[<which cells>]{sample.ipynb}`
 
 The cells specification can be numbers separated by comma, or ranges using dashes (defaulting to first and last if any side is not included).
 
@@ -46,6 +46,25 @@ Examples:
 - include the cell number 3, and from 12 to the notebook's end
 
     `\jupynotex[3,12-]{somenote.ipynb}`
+
+
+## Configurations available
+
+The whole package can be configured when included in your project:
+
+    \usepackage[OPTIONS]{jupynotex}
+
+Global options available:
+
+- `output-text-limit=N` where N is a number; it will wrap all outputs that exceed that quantity of columns
+
+Also, each cell(s) can be configured when included in your .tex files:
+
+    `\jupynotex[3, OPTIONS]{yournotebook.ipynb}`
+
+Cell options available:
+
+- `output-image-size=SIZE` where SIZE is a valid .tex size (a number with an unit, e.g. `70mm`); it will set any image in the output of those cells to the indicated size
 
 
 ## Full Example

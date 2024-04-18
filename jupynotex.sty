@@ -1,7 +1,21 @@
 \ProvidesPackage{jupynotex}[0.1]
 
 \usepackage{tcolorbox}
+\usepackage{pgfopts}
 
-\newcommand{\jupynotex}[2][-]{
-    \input|"python3 jupynotex.py #2 #1"
+\newcommand*\jupynotex@outputtextlimit@value{}
+
+
+\pgfkeys{
+  /jupynotex/.cd ,
+    output-text-limit/.store in=\jupynotex@outputtextlimit@value
 }
+
+\ProcessPgfPackageOptions{/jupynotex}
+
+\newcommand{\jupynotex}[2][-]{%
+    \input{|python3 jupynotex.py '#2' '#1' '\jupynotex@outputtextlimit@value'}
+}
+
+\endinput
+

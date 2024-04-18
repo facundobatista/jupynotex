@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Facundo Batista
+# Copyright 2020-2024 Facundo Batista
 # All Rights Reserved
 # Licensed under Apache 2.0
 
@@ -31,7 +31,7 @@ def notebook():
         with open(name, 'wt', encoding='utf8') as fh:
             json.dump(fake_nb, fh)
 
-        return Notebook(name)
+        return Notebook(name, {})
 
     yield _f
     os.unlink(name)
@@ -39,7 +39,7 @@ def notebook():
 
 def test_empty(notebook):
     nb = notebook([])
-    assert len(nb) == 0
+    assert len(nb._cells) == 0
 
 
 def test_source_code_simple(notebook):
@@ -48,17 +48,17 @@ def test_source_code_simple(notebook):
         'source': ['line1\n', '    line2\n'],
     }
     nb = notebook([rawcell])
-    assert len(nb) == 1
+    assert len(nb._cells) == 1
 
     src, _ = nb.get(1)
-    expected = textwrap.dedent("""\
+    expected = textwrap.dedent("""
         \\begin{footnotesize}
         \\begin{verbatim}
         line1
             line2
         \\end{verbatim}
         \\end{footnotesize}
-    """)
+    """).strip()
     assert src == expected
 
 
@@ -69,7 +69,7 @@ def test_source_code_highlighted(notebook, monkeypatch):
         'source': ['line1\n', '    line2\n'],
     }
     nb = notebook([rawcell], lang_name='testlang')
-    assert len(nb) == 1
+    assert len(nb._cells) == 1
 
     src, _ = nb.get(1)
     expected = textwrap.dedent("""\
@@ -77,7 +77,7 @@ def test_source_code_highlighted(notebook, monkeypatch):
         line1
             line2
         highlight end
-    """)
+    """).strip()
     assert src == expected
 
 
@@ -87,7 +87,7 @@ def test_source_markdown_ignored(notebook):
         'source': ['line1\n', '    line2\n'],
     }
     nb = notebook([rawcell])
-    assert len(nb) == 0
+    assert len(nb._cells) == 0
 
 
 def test_output_missing(notebook):
@@ -96,7 +96,7 @@ def test_output_missing(notebook):
         'source': [],
     }
     nb = notebook([rawcell])
-    assert len(nb) == 1
+    assert len(nb._cells) == 1
 
     _, out = nb.get(1)
     assert out is None
@@ -116,7 +116,7 @@ def test_output_simple_executeresult_plain(notebook):
         ],
     }
     nb = notebook([rawcell])
-    assert len(nb) == 1
+    assert len(nb._cells) == 1
 
     _, out = nb.get(1)
     expected = textwrap.dedent("""\
@@ -126,7 +126,7 @@ def test_output_simple_executeresult_plain(notebook):
         line2
         \\end{verbatim}
         \\end{footnotesize}
-    """)
+    """).strip()
     assert out == expected
 
 
@@ -145,13 +145,13 @@ def test_output_simple_executeresult_latex(notebook):
         ],
     }
     nb = notebook([rawcell])
-    assert len(nb) == 1
+    assert len(nb._cells) == 1
 
     _, out = nb.get(1)
     expected = textwrap.dedent("""\
         some latex line
         latex 2
-    """)
+    """).strip()
     assert out == expected
 
 
@@ -172,13 +172,13 @@ def test_output_simple_executeresult_latex_and_png(notebook):
         ],
     }
     nb = notebook([rawcell])
-    assert len(nb) == 1
+    assert len(nb._cells) == 1
 
     _, out = nb.get(1)
     expected = textwrap.dedent("""\
         some latex line
         latex 2
-    """)
+    """).strip()
     assert out == expected
 
 
@@ -198,10 +198,10 @@ def test_output_simple_executeresult_png(notebook):
         ],
     }
     nb = notebook([rawcell])
-    assert len(nb) == 1
+    assert len(nb._cells) == 1
 
     _, out = nb.get(1)
-    m = re.match(r'\\includegraphics\[width=1\\textwidth\]\{(.+)\}\n', out)
+    m = re.match(r'\\includegraphics\[width=1\\textwidth\]\{(.+)\}', out)
     assert m, repr(out)
     (fpath,) = m.groups()
     assert "\\" not in fpath  # no backslashes in Windows
@@ -222,7 +222,7 @@ def test_output_simple_executeresult_svg(notebook):
         ],
     }
     nb = notebook([rawcell])
-    assert len(nb) == 1
+    assert len(nb._cells) == 1
     dst_fpath = None
 
     def fake_run(cmd):
@@ -242,7 +242,7 @@ def test_output_simple_executeresult_svg(notebook):
 
     with patch('subprocess.run', fake_run):
         _, out = nb.get(1)
-    m = re.match(r'\\includegraphics\[width=1\\textwidth\]\{(.+)\}\n', out)
+    m = re.match(r'\\includegraphics\[width=1\\textwidth\]\{(.+)\}', out)
     assert m
     (fpath,) = m.groups()
     assert "\\" not in fpath  # no backslashes in Windows
@@ -261,7 +261,7 @@ def test_output_simple_stream(notebook):
         ],
     }
     nb = notebook([rawcell])
-    assert len(nb) == 1
+    assert len(nb._cells) == 1
 
     _, out = nb.get(1)
     expected = textwrap.dedent("""\
@@ -271,7 +271,7 @@ def test_output_simple_stream(notebook):
         text 2
         \\end{verbatim}
         \\end{footnotesize}
-    """)
+    """).strip()
     assert out == expected
 
 
@@ -290,10 +290,35 @@ def test_output_simple_display_data_image(notebook):
         ],
     }
     nb = notebook([rawcell])
-    assert len(nb) == 1
+    assert len(nb._cells) == 1
 
     _, out = nb.get(1)
-    m = re.match(r'\\includegraphics\[width=1\\textwidth\]\{(.+)\}\n', out)
+    m = re.match(r'\\includegraphics\[width=1\\textwidth\]\{(.+)\}', out)
+    assert m, repr(out)
+    (fpath,) = m.groups()
+    assert pathlib.Path(fpath).read_bytes() == raw_content
+
+
+def test_output_image_custom_size(notebook):
+    raw_content = b"\x01\x02 asdlklda3wudghlaskgdlask"
+    rawcell = {
+        'cell_type': 'code',
+        'source': [],
+        'outputs': [
+            {
+                'output_type': 'display_data',
+                'data': {
+                    'image/png': base64.b64encode(raw_content).decode('ascii'),
+                },
+            },
+        ],
+    }
+    nb = notebook([rawcell])
+    assert len(nb._cells) == 1
+
+    nb.parse_cells("1, output-image-size=789")
+    _, out = nb.get(1)
+    m = re.match(r'\\includegraphics\[width=789\]\{(.+)\}', out)
     assert m, repr(out)
     (fpath,) = m.groups()
     assert pathlib.Path(fpath).read_bytes() == raw_content
@@ -313,7 +338,7 @@ def test_output_simple_display_data_plain(notebook):
         ],
     }
     nb = notebook([rawcell])
-    assert len(nb) == 1
+    assert len(nb._cells) == 1
 
     _, out = nb.get(1)
     expected = textwrap.dedent("""\
@@ -323,7 +348,7 @@ def test_output_simple_display_data_plain(notebook):
         line2
         \\end{verbatim}
         \\end{footnotesize}
-    """)
+    """).strip()
     assert out == expected
 
 
@@ -344,7 +369,7 @@ def test_output_multiple(notebook):
         ],
     }
     nb = notebook([rawcell])
-    assert len(nb) == 1
+    assert len(nb._cells) == 1
 
     _, out = nb.get(1)
     expected = textwrap.dedent("""\
@@ -356,7 +381,7 @@ def test_output_multiple(notebook):
         text 2
         \\end{verbatim}
         \\end{footnotesize}
-    """)
+    """).strip()
     assert out == expected
 
 
@@ -384,7 +409,7 @@ def test_output_error(notebook):
         ],
     }
     nb = notebook([rawcell])
-    assert len(nb) == 1
+    assert len(nb._cells) == 1
 
     _, out = nb.get(1)
     expected = textwrap.dedent("""\
@@ -397,7 +422,7 @@ def test_output_error(notebook):
         ValueError: not enough values to unpack (expected 3, got 2)
         \\end{verbatim}
         \\end{footnotesize}
-    """)
+    """).strip()
     assert out == expected
 
 
@@ -417,7 +442,7 @@ def test_output_with_control_codes(notebook):
         ],
     }
     nb = notebook([rawcell])
-    assert len(nb) == 1
+    assert len(nb._cells) == 1
 
     _, out = nb.get(1)
     expected = textwrap.dedent("""\
@@ -428,5 +453,80 @@ def test_output_with_control_codes(notebook):
         foo
         \\end{verbatim}
         \\end{footnotesize}
-    """)
+    """).strip()
     assert out == expected
+
+
+def test_output_plain_wrapped_ok(notebook):
+    rawcell = {
+        'cell_type': 'code',
+        'source': [],
+        'outputs': [
+            {
+                'output_type': 'execute_result',
+                'data': {
+                    'text/plain': [
+                        'This is a very long line that will wrap twice.',
+                        'Line 2.',
+                        'Also a long line, not *that* long.',
+                        'Line 4.',
+                        '',
+                    ],
+                },
+            },
+        ],
+    }
+    nb = notebook([rawcell])
+    nb.config_options = {"output-text-limit": 20}
+
+    _, out = nb.get(1)
+    expected = textwrap.dedent("""\
+        \\begin{footnotesize}
+        \\begin{verbatim}
+        This is a very long
+            ↳ line that will wrap
+            ↳ twice.
+        Line 2.
+        Also a long line,
+            ↳ not *that* long.
+        Line 4.
+
+        \\end{verbatim}
+        \\end{footnotesize}
+    """).strip()
+    assert out == expected
+
+
+def test_configvalidation_empty(tmp_path):
+    fake_nb_path = tmp_path / "fake.ipynb"
+    content = {'cells': [], 'metadata': {'language_info': {'name': None}}}
+    with open(fake_nb_path, 'wt', encoding='utf8') as fh:
+        json.dump(content, fh)
+
+    nb = Notebook(fake_nb_path, {})
+    assert nb.config_options == {}
+
+
+def test_configvalidation_outputtextlimit_ok(tmp_path):
+    fake_nb_path = tmp_path / "fake.ipynb"
+    content = {'cells': [], 'metadata': {'language_info': {'name': None}}}
+    with open(fake_nb_path, 'wt', encoding='utf8') as fh:
+        json.dump(content, fh)
+
+    nb = Notebook(fake_nb_path, {"output-text-limit": "123"})
+    assert nb.config_options == {"output-text-limit": 123}
+
+
+@pytest.mark.parametrize("value", [
+    "abc",  # not int
+    "0",  # zero
+    "-2",  # negative
+])
+def test_configvalidation_outputtextlimit_bad(value):
+    with pytest.raises(ValueError):
+        Notebook("boguspath", {"output-text-limit": value})
+
+
+def test_configvalidation_wrong_key():
+    with pytest.raises(KeyError):
+        Notebook("boguspath", {"autodestroy": "1"})
