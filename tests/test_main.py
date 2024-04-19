@@ -9,7 +9,7 @@ from unittest.mock import patch
 import pytest
 
 import jupynotex
-from jupynotex import main, Notebook
+from jupynotex import main, Notebook, CMDLINE_OPTION_NAMES
 
 
 class FakeNotebook:
@@ -85,7 +85,8 @@ def test_simple_ok(capsys, save_notebook):
         ("test cell content up", "test cell content down"),
     ])
 
-    main(notebook_path, '1', {})
+    empty_config = {key: "" for key in CMDLINE_OPTION_NAMES}
+    main(notebook_path, '1', empty_config)
     expected = textwrap.dedent("""\
         \\begin{tcolorbox}[testformat, title=Cell {01}]
         test cell content up

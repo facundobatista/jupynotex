@@ -37,9 +37,18 @@ FORMAT_OK = (
 # a little mark to put in the continuation line(s) when text is wrapped
 WRAP_MARK = "↳"
 
+# the options available for command line
+CMDLINE_OPTION_NAMES = [
+    "output-text-limit",
+]
+
 
 def _validator_positive_int(value):
     """Validate value is a positive integer."""
+    value = value.strip()
+    if not value:
+        return
+
     value = int(value)
     if value <= 0:
         raise ValueError("Value must be greater than zero.")
@@ -297,15 +306,11 @@ def main(notebook_path, cells_spec, config_options):
 
 
 if __name__ == "__main__":
-    option_names = [
-        "output-text-limit",
-    ]
-
-    if len(sys.argv) != 3 + len(option_names):
+    if len(sys.argv) != 3 + len(CMDLINE_OPTION_NAMES):
         print(__doc__)
         exit()
 
     notebook_path, cells_spec, *option_values = sys.argv[1:4]
-    config_options = dict(zip(option_names, option_values))
+    config_options = dict(zip(CMDLINE_OPTION_NAMES, option_values))
 
     main(notebook_path, cells_spec, config_options)

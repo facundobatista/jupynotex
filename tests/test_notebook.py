@@ -517,6 +517,16 @@ def test_configvalidation_outputtextlimit_ok(tmp_path):
     assert nb.config_options == {"output-text-limit": 123}
 
 
+def test_configvalidation_outputtextlimit_empty(tmp_path):
+    fake_nb_path = tmp_path / "fake.ipynb"
+    content = {'cells': [], 'metadata': {'language_info': {'name': None}}}
+    with open(fake_nb_path, 'wt', encoding='utf8') as fh:
+        json.dump(content, fh)
+
+    nb = Notebook(fake_nb_path, {"output-text-limit": ""})
+    assert nb.config_options == {"output-text-limit": None}
+
+
 @pytest.mark.parametrize("value", [
     "abc",  # not int
     "0",  # zero
