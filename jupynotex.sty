@@ -13,8 +13,8 @@
 
 \ProcessPgfPackageOptions{/jupynotex}
 
-\newcommand{\jupynotex}[2][-]{%
-    \input{|python3 jupynotex.py '#2' '#1' '\jupynotex@outputtextlimit@value'}
+\newcommand{\jupynotex}[2][-]{
+    \input|"python3 jupynotex.py '#2' '#1' '\jupynotex@outputtextlimit@value'"
 }
 
 \endinput
