@@ -497,6 +497,33 @@ def test_output_plain_wrapped_ok(notebook):
     assert out == expected
 
 
+def test_output_indented(notebook):
+    rawcell = {
+        'cell_type': 'code',
+        'source': [],
+        'outputs': [
+            {
+                'output_type': 'stream',
+                'text': ['some text line', '    text indented', '  no trailing spaces   '],
+            },
+        ],
+    }
+    nb = notebook([rawcell])
+    assert len(nb._cells) == 1
+
+    _, out = nb.get(1)
+    expected = textwrap.dedent("""\
+        \\begin{footnotesize}
+        \\begin{verbatim}
+        some text line
+            text indented
+          no trailing spaces
+        \\end{verbatim}
+        \\end{footnotesize}
+    """).strip()
+    assert out == expected
+
+
 def test_configvalidation_empty(tmp_path):
     fake_nb_path = tmp_path / "fake.ipynb"
     content = {'cells': [], 'metadata': {'language_info': {'name': None}}}

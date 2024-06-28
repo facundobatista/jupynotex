@@ -63,7 +63,7 @@ def _process_plain_text(lines, config_options=None):
     result = []
     result.extend(VERBATIM_BEGIN)
     for line in lines:
-        line = line.strip()
+        line = line.rstrip()
 
         # clean color escape codes (\u001b plus \[Nm where N are one or more digits)
         line = re.sub(r"\x1b\[[\d;]+m", "", line)
