@@ -2,14 +2,12 @@
 # All Rights Reserved
 # Licensed under Apache 2.0
 
-"""USAGE: jupynote.py notebook.ipynb cells
+"""Convert a jupyter notebook into latex for inclusion in documents."""
 
-    cells is a string with which cells to include, separate groups
-    with comma, ranges with dash (with defaults to start and end.
-"""
-
+import argparse
 import base64
 import json
+import pathlib
 import re
 import subprocess
 import sys
@@ -17,6 +15,13 @@ import tempfile
 import textwrap
 import traceback
 
+# message to help people to report potential problems
+REPORT_MSG = """
+
+Please report the issue in
+https://github.com/facundobatista/jupynotex/issues/new
+including the latex log. Thanks!
+"""
 
 # basic verbatim start/end
 VERBATIM_BEGIN = [r"\begin{footnotesize}", r"\begin{verbatim}"]
@@ -38,9 +43,9 @@ FORMAT_OK = (
 WRAP_MARK = "↳"
 
 # the options available for command line
-CMDLINE_OPTION_NAMES = [
-    "output-text-limit",
-]
+CMDLINE_OPTION_NAMES = {
+    "output-text-limit": "The column limit for the output text of a cell",
+}
 
 
 def _validator_positive_int(value):
@@ -157,12 +162,10 @@ class Notebook:
         "output-text-limit": _validator_positive_int,
     }
 
-    def __init__(self, path, config_options):
+    def __init__(self, notebook_path, config_options):
         self.config_options = self._validate_config(config_options)
         self.cell_options = {}
-
-        with open(path, 'rt', encoding='utf8') as fh:
-            nb_data = json.load(fh)
+        nb_data = json.loads(notebook_path.read_text())
 
         # get the languaje, to highlight
         lang = nb_data['metadata']['language_info']['name']
@@ -288,13 +291,17 @@ def main(notebook_path, cells_spec, config_options):
     for cell in cells:
         try:
             src, out = nb.get(cell)
-        except Exception:
+        except Exception as exc:
             title = "ERROR when parsing cell {}".format(cell)
             print(r"\begin{{tcolorbox}}[{}, title={{{}}}]".format(FORMAT_ERROR, title))
-            tb = traceback.format_exc()
-            _parts = _process_plain_text(tb.split('\n'))
+            print(exc)
+            _parts = _process_plain_text(REPORT_MSG.split('\n'))
             print('\n'.join(_parts))
             print(r"\end{tcolorbox}")
+
+            # send title and traceback to stderr, which will appear in compilation log
+            tb = traceback.format_exc()
+            print(tb, file=sys.stderr)
             continue
 
         print(r"\begin{{tcolorbox}}[{}, title=Cell {{{:02d}}}]".format(FORMAT_OK, cell))
@@ -306,11 +313,19 @@ def main(notebook_path, cells_spec, config_options):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3 + len(CMDLINE_OPTION_NAMES):
-        print(__doc__)
-        exit()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("notebook_path", type=pathlib.Path, help="The path to the notebook.")
+    parser.add_argument(
+        "cells_spec",
+        type=str,
+        help=(
+            "A string specifying which cells to include; use comma to separate groups, "
+            "dash for ranges (with defaults to start and end)"
+        )
+    )
+    for option, explanation in CMDLINE_OPTION_NAMES.items():
+        parser.add_argument(option, type=str, help=explanation)
+    args = parser.parse_args()
 
-    notebook_path, cells_spec, *option_values = sys.argv[1:4]
-    config_options = dict(zip(CMDLINE_OPTION_NAMES, option_values))
-
-    main(notebook_path, cells_spec, config_options)
+    config_options = {option: getattr(args, option) for option in CMDLINE_OPTION_NAMES}
+    main(args.notebook_path, args.cells_spec, config_options)
