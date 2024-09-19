@@ -2,8 +2,10 @@
 # All Rights Reserved
 # Licensed under Apache 2.0
 
-import pytest
+import pathlib
 import re
+
+import pytest
 
 from jupynotex import Notebook
 
@@ -11,7 +13,7 @@ from jupynotex import Notebook
 @pytest.fixture
 def notebook():
     """Provide a simple notebook."""
-    return Notebook("tests/example.ipynb", {})
+    return Notebook(pathlib.Path("tests/example.ipynb"), {})
 
 
 def test_empty(notebook):

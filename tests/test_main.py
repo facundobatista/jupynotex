@@ -121,17 +121,25 @@ def test_simple_error(monkeypatch, capsys, save_notebook):
 
     # verify the beginning and the end, as the middle part is specific to the environment
     # where the test runs
-    expected_ini = [
-        r"\begin{tcolorbox}[testformat, title={ERROR when parsing cell 1}]",
-        r"Traceback (most recent call last):",
-    ]
     expected_end = [
+        r"Traceback (most recent call last):",
         r"ValueError: test problem",
         r"\end{tcolorbox}",
     ]
-    out = [line for line in capsys.readouterr().out.split('\n') if line]
-    assert expected_ini == out[:2]
-    assert expected_end == out[-2:]
+    outerr = capsys.readouterr()
+    out = [line for line in outerr.out.split('\n') if line]
+    assert out == [
+        r"\begin{tcolorbox}[testformat, title={ERROR when parsing cell 1}]",
+        "test problem",
+        'Please report the issue in',
+        'https://github.com/facundobatista/jupynotex/issues/new',
+        'including the latex log. Thanks!',
+        r"\end{tcolorbox}",
+    ]
+
+    err = [line for line in outerr.err.split('\n') if line]
+    assert err[0] == "Traceback (most recent call last):"
+    assert err[-1] == "ValueError: test problem"
 
 
 def test_multiple(capsys, save_notebook):

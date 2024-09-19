@@ -31,7 +31,7 @@ def notebook():
         with open(name, 'wt', encoding='utf8') as fh:
             json.dump(fake_nb, fh)
 
-        return Notebook(name, {})
+        return Notebook(pathlib.Path(name), {})
 
     yield _f
     os.unlink(name)
