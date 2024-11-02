@@ -231,9 +231,10 @@ def test_output_simple_executeresult_svg(notebook):
 
         assert cmd[0] == 'inkscape'
         assert cmd[1] == '--export-text-to-path'
-        assert cmd[2].startswith('--export-pdf=')
-        dst_fpath = cmd[2][len('--export-pdf='):]
-        src_fpath = cmd[3]
+        assert cmd[2] == '--export-type=pdf'
+        assert cmd[3].startswith('--export-filename=')
+        dst_fpath = cmd[3][len('--export-filename='):]
+        src_fpath = cmd[4]
 
         # check that stuff in the source makes sense
         with open(src_fpath, 'rb') as fh:

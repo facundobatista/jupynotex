@@ -130,7 +130,13 @@ class ItemProcessor:
         with open(svg_fname, 'wb') as fh:
             fh.write(raw_svg)
 
-        cmd = ['inkscape', '--export-text-to-path', '--export-pdf={}'.format(pdf_fname), svg_fname]
+        cmd = [
+            'inkscape',
+            '--export-text-to-path',
+            '--export-type=pdf',
+            f'--export-filename={pdf_fname}',
+            svg_fname,
+        ]
         subprocess.run(cmd)
 
         return pdf_fname
