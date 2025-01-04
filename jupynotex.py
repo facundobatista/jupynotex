@@ -192,6 +192,11 @@ class Notebook:
         """Process the source of a cell."""
         source = content['source']
         result = []
+
+        # Ensure `source` is a list of strings
+        if isinstance(source, str):
+            source = [source]  # Convert single string to a list
+
         if content['cell_type'] == 'code':
             begin, end = self._highlight_delimiters
             result.extend(begin)
