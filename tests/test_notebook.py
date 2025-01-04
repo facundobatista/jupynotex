@@ -568,3 +568,22 @@ def test_configvalidation_outputtextlimit_bad(value):
 def test_configvalidation_wrong_key():
     with pytest.raises(KeyError):
         Notebook("boguspath", {"autodestroy": "1"})
+
+
+def test_source_code_single_line(notebook):
+    rawcell = {
+        'cell_type': 'code',
+        'source': 'line1\n',
+    }
+    nb = notebook([rawcell])
+    assert len(nb._cells) == 1
+
+    src, _ = nb.get(1)
+    expected = textwrap.dedent("""
+        \\begin{footnotesize}
+        \\begin{verbatim}
+        line1
+        \\end{verbatim}
+        \\end{footnotesize}
+    """).strip()
+    assert src == expected
