@@ -4,7 +4,7 @@ A Jupyter Notebook to LaTeX translator to include whole or partial notebooks in 
 
 ## Wait, what?
 
-A TeX package that you can use in your project to include Jupyter Notebooks (all of them, or some specific cells) as part of your text. 
+A TeX package that you can use in your project to include Jupyter Notebooks (all of them, or some specific cells) as part of your text.
 
 It will convert the Jupyter Notebook format to proper LaTeX so it gets included seamless, supporting text, latex, images, etc.
 
@@ -38,7 +38,7 @@ Examples:
 - include cells 1, 3, and 6, 7, and 8 from the range:
 
     `\jupynotex[1,3,6-8]{sample.ipynb}`
-    
+
 - include everything up to the fourth cell, and the eigth:
 
     `\jupynotex[-4,8]{whatever.ipynb}`
@@ -57,10 +57,16 @@ The whole package can be configured when included in your project:
 Global options available:
 
 - `output-text-limit=N` where N is a number; it will wrap all outputs that exceed that quantity of columns
+- `cells-id-template=TPL`: Where TPL is a template to build the title of each cell using Python's format syntax; available variables are 'number' and 'filename', it defaults to `Cell {number:02d}`
+- `first-cell-id-template=TPL`: Same than `cells-id-template` but only applies to the first cell of each file; it defaults to the value of `cells-id-template`
+
+A note regarding these configurations per project: as they use Python's format syntax, it may get weird with curly braces, which you must use for LaTeX to respect spaces and other characters. E.g., see this config that changes the title of all cells to just the number using three digits surrounded by dots, see how there is the `{}` for latex to delimit the whole value of the config variable, and the `{}` inside for Python formatting:
+
+    \usepackage[cells-id-template={...{number:03d}...}]{jupynotex}
 
 Also, each cell(s) can be configured when included in your .tex files:
 
-    `\jupynotex[3, OPTIONS]{yournotebook.ipynb}`
+    \jupynotex[3, OPTIONS]{yournotebook.ipynb}
 
 Cell options available:
 
@@ -118,7 +124,7 @@ To support SVG images in the notebook, [inkscape](https://inkscape.org/) needs t
 Please open any issue or ask any question [here](https://github.com/facundobatista/jupynotex/issues/new).
 
 To run the tests (need to have [fades](https://github.com/pyar/fades) installed):
-    
+
     ./tests/run
 
 This material is subject to the Apache 2.0 license.
