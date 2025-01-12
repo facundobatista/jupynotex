@@ -353,5 +353,10 @@ if __name__ == "__main__":
         parser.add_argument(option, type=str, help=explanation)
     args = parser.parse_args()
 
-    config_options = {option: getattr(args, option) for option in CMDLINE_OPTION_NAMES}
+    # get config options from command line (ignoring '', which is the default in .sty file)
+    config_options = {}
+    for option in CMDLINE_OPTION_NAMES:
+        value = getattr(args, option)
+        if value:
+            config_options[option] = value
     main(args.notebook_path, args.cells_spec, config_options)
