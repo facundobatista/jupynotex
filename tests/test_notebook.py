@@ -1,4 +1,4 @@
-# Copyright 2020-2024 Facundo Batista
+# Copyright 2020-2025 Facundo Batista
 # All Rights Reserved
 # Licensed under Apache 2.0
 
@@ -563,11 +563,6 @@ def test_configvalidation_outputtextlimit_empty(tmp_path):
 def test_configvalidation_outputtextlimit_bad(value):
     with pytest.raises(ValueError):
         Notebook("boguspath", {"output-text-limit": value})
-
-
-def test_configvalidation_wrong_key():
-    with pytest.raises(KeyError):
-        Notebook("boguspath", {"autodestroy": "1"})
 
 
 def test_source_code_single_line(notebook):

@@ -1,4 +1,4 @@
-# Copyright 2020-2024 Facundo Batista
+# Copyright 2020-2025 Facundo Batista
 # All Rights Reserved
 # Licensed under Apache 2.0
 
@@ -45,6 +45,14 @@ WRAP_MARK = "↳"
 # the options available for command line
 CMDLINE_OPTION_NAMES = {
     "output-text-limit": "The column limit for the output text of a cell",
+    "cells-id-template": (
+        "A template to build the title of each cell using Python's format syntax; "
+        "available variables 'number' and 'filename', defaults to 'Cell {number:02d}'"
+    ),
+    "first-cell-id-template": (
+        "Same than cells-id-template but only applies to the first cell of each file; "
+        "defaults to the value of cells-id-template"
+    ),
 }
 
 
@@ -164,7 +172,7 @@ class ItemProcessor:
 class Notebook:
     """The notebook converter to latex."""
 
-    GLOBAL_CONFIGS = {
+    _configs_validator = {
         "output-text-limit": _validator_positive_int,
     }
 
@@ -183,9 +191,10 @@ class Notebook:
     def _validate_config(self, config):
         """Validate received configuration."""
         for key, value in list(config.items()):
-            validator = self.GLOBAL_CONFIGS[key]
-            new_value = validator(value)
-            config[key] = new_value
+            validator = self._configs_validator.get(key)
+            if validator is not None:
+                new_value = validator(value)
+                config[key] = new_value
         return config
 
     def _proc_src(self, content):
@@ -299,12 +308,16 @@ def main(notebook_path, cells_spec, config_options):
     nb = Notebook(notebook_path, config_options)
     cells = nb.parse_cells(cells_spec)
 
+    # get templates from config
+    cells_id_template = config_options.get("cells-id-template", "Cell {number:02d}")
+    first_cell_id_template = config_options.get("first-cell-id-template", cells_id_template)
+
     for cell in cells:
         try:
             src, out = nb.get(cell)
         except Exception as exc:
             title = "ERROR when parsing cell {}".format(cell)
-            print(r"\begin{{tcolorbox}}[{}, title={{{}}}]".format(FORMAT_ERROR, title))
+            print(r"\begin{{tcolorbox}}[{}, title={}]".format(FORMAT_ERROR, title))
             print(exc)
             _parts = _process_plain_text(REPORT_MSG.split('\n'))
             print('\n'.join(_parts))
@@ -315,7 +328,9 @@ def main(notebook_path, cells_spec, config_options):
             print(tb, file=sys.stderr)
             continue
 
-        print(r"\begin{{tcolorbox}}[{}, title=Cell {{{:02d}}}]".format(FORMAT_OK, cell))
+        template = first_cell_id_template if cell == 1 else cells_id_template
+        title = template.format(number=cell, filename=notebook_path.name)
+        print(r"\begin{{tcolorbox}}[{}, title={}]".format(FORMAT_OK, title))
         print(src)
         if out:
             print(r"\tcblower")
@@ -338,5 +353,10 @@ if __name__ == "__main__":
         parser.add_argument(option, type=str, help=explanation)
     args = parser.parse_args()
 
-    config_options = {option: getattr(args, option) for option in CMDLINE_OPTION_NAMES}
+    # get config options from command line (ignoring '', which is the default in .sty file)
+    config_options = {}
+    for option in CMDLINE_OPTION_NAMES:
+        value = getattr(args, option)
+        if value:
+            config_options[option] = value
     main(args.notebook_path, args.cells_spec, config_options)

@@ -4,17 +4,27 @@
 \usepackage{pgfopts}
 
 \newcommand*\jupynotex@outputtextlimit@value{}
+\newcommand*\jupynotex@cellsidtemplate@value{}
+\newcommand*\jupynotex@firstcellidtemplate@value{}
 
 
 \pgfkeys{
   /jupynotex/.cd ,
     output-text-limit/.store in=\jupynotex@outputtextlimit@value
 }
+\pgfkeys{
+  /jupynotex/.cd ,
+    cells-id-template/.store in=\jupynotex@cellsidtemplate@value
+}
+\pgfkeys{
+  /jupynotex/.cd ,
+    first-cell-id-template/.store in=\jupynotex@firstcellidtemplate@value
+}
 
 \ProcessPgfPackageOptions{/jupynotex}
 
 \newcommand{\jupynotex}[2][-]{
-    \input|"python3 jupynotex.py '#2' '#1' '\jupynotex@outputtextlimit@value'"
+    \input|"python3 jupynotex.py '#2' '#1' '\jupynotex@outputtextlimit@value' '\jupynotex@cellsidtemplate@value' '\jupynotex@firstcellidtemplate@value'"
 }
 
 \endinput
