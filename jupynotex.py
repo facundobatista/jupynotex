@@ -55,6 +55,26 @@ CMDLINE_OPTION_NAMES = {
     ),
 }
 
+LATEX_ESCAPE = [
+    ("\\", r"\textbackslash"),  # needs to go first, otherwise transforms other escapings
+    ("&", r"\&"),
+    ("%", r"\%"),
+    ("$", r"\$"),
+    ("#", r"\#"),
+    ("_", r"\_"),
+    ("{", r"\{"),
+    ("}", r"\}"),
+    ("~", r"\textasciitilde"),
+    ("^", r"\textasciicircum"),
+]
+
+
+def latex_escape(text):
+    """Escape some chars in latex."""
+    for src, dst in LATEX_ESCAPE:
+        text = text.replace(src, dst)
+    return text
+
 
 def _validator_positive_int(value):
     """Validate value is a positive integer."""
@@ -312,6 +332,7 @@ def main(notebook_path, cells_spec, config_options):
     cells_id_template = config_options.get("cells-id-template", "Cell {number:02d}")
     first_cell_id_template = config_options.get("first-cell-id-template", cells_id_template)
 
+    escaped_path_name = latex_escape(notebook_path.name)
     for cell in cells:
         try:
             src, out = nb.get(cell)
@@ -329,7 +350,7 @@ def main(notebook_path, cells_spec, config_options):
             continue
 
         template = first_cell_id_template if cell == 1 else cells_id_template
-        title = template.format(number=cell, filename=notebook_path.name)
+        title = template.format(number=cell, filename=escaped_path_name)
         print(r"\begin{{tcolorbox}}[{}, title={}]".format(FORMAT_OK, title))
         print(src)
         if out:

@@ -47,9 +47,9 @@ def save_notebook(monkeypatch, tmp_path):
     monkeypatch.setattr(jupynotex, "VERBATIM_END", [])
     monkeypatch.setattr(jupynotex, 'FORMAT_OK', 'testformat')
 
-    name = tmp_path / "testnotebook.ipynb"
+    def _f(contents, filename="testnotebook.ipynb"):
+        name = tmp_path / filename
 
-    def _f(contents):
         cells = []
         for src, out in contents:
             cell = {
@@ -226,6 +226,23 @@ def test_configurecell_using_filename(capsys, save_notebook):
     main(notebook_path, '1', {"first-cell-id-template": "{filename}: #{number:d}"})
     expected = textwrap.dedent("""\
         \\begin{tcolorbox}[testformat, title=testnotebook.ipynb: #1]
+        test cell content up
+        \\tcblower
+        test cell content down
+        \\end{tcolorbox}
+    """)
+    assert expected == capsys.readouterr().out
+
+
+def test_title_filename_weirdchars(capsys, save_notebook):
+    notebook_path = save_notebook([
+        ("test cell content up", "test cell content down"),
+        ("test cell content ONLY up", ""),
+    ], filename="with_underscore.ipynb")
+
+    main(notebook_path, '1', {"first-cell-id-template": "{filename}: #{number:d}"})
+    expected = textwrap.dedent("""\
+        \\begin{tcolorbox}[testformat, title=with\\_underscore.ipynb: #1]
         test cell content up
         \\tcblower
         test cell content down
