@@ -357,6 +357,7 @@ def main(notebook_path, cells_spec, config_options):
             print(r"\tcblower")
             print(out)
         print(r"\end{tcolorbox}")
+        print()  # extra new line so boxes are separated in the LaTeX PoV
 
 
 if __name__ == "__main__":

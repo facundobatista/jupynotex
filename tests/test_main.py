@@ -92,6 +92,7 @@ def test_simple_ok(capsys, save_notebook):
         \\tcblower
         test cell content down
         \\end{tcolorbox}
+
     """)
     assert expected == capsys.readouterr().out
 
@@ -107,6 +108,7 @@ def test_simple_only_first(capsys, save_notebook):
         \\begin{tcolorbox}[testformat, title=Cell 01]
         test cell content up
         \\end{tcolorbox}
+
     """)
     assert expected == capsys.readouterr().out
 
@@ -149,9 +151,11 @@ def test_multiple(capsys, save_notebook):
         \\tcblower
         test cell content down
         \\end{tcolorbox}
+
         \\begin{tcolorbox}[testformat, title=Cell 02]
         test cell content ONLY up
         \\end{tcolorbox}
+
     """)
     assert expected == capsys.readouterr().out
 
@@ -169,9 +173,11 @@ def test_configurecell_all(capsys, save_notebook):
         \\tcblower
         test cell content down
         \\end{tcolorbox}
+
         \\begin{tcolorbox}[testformat, title=--00002--]
         test cell content ONLY up
         \\end{tcolorbox}
+
     """)
     assert expected == capsys.readouterr().out
 
@@ -189,9 +195,11 @@ def test_configurecell_only_first(capsys, save_notebook):
         \\tcblower
         test cell content down
         \\end{tcolorbox}
+
         \\begin{tcolorbox}[testformat, title=Cell 02]
         test cell content ONLY up
         \\end{tcolorbox}
+
     """)
     assert expected == capsys.readouterr().out
 
@@ -210,9 +218,11 @@ def test_configurecell_general_and_first(capsys, save_notebook):
         \\tcblower
         test cell content down
         \\end{tcolorbox}
+
         \\begin{tcolorbox}[testformat, title=#2]
         test cell content ONLY up
         \\end{tcolorbox}
+
     """)
     assert expected == capsys.readouterr().out
 
@@ -230,6 +240,7 @@ def test_configurecell_using_filename(capsys, save_notebook):
         \\tcblower
         test cell content down
         \\end{tcolorbox}
+
     """)
     assert expected == capsys.readouterr().out
 
@@ -247,5 +258,6 @@ def test_title_filename_weirdchars(capsys, save_notebook):
         \\tcblower
         test cell content down
         \\end{tcolorbox}
+
     """)
     assert expected == capsys.readouterr().out
