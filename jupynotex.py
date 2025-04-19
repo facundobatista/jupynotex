@@ -34,10 +34,23 @@ HIGHLIGHTERS = {
 }
 
 # the different formats to be used when error or all ok
-FORMAT_ERROR = r"colback=red!5!white,colframe=red!75!"
-FORMAT_OK = (
-    r"coltitle=red!75!black, colbacktitle=black!10!white, "
-    r"halign title=right, fonttitle=\sffamily\mdseries\scshape\footnotesize")
+style_formats = [
+    # text background color
+    "colback=black!2",
+    # frame color and width
+    "colframe=black!60",
+    "boxrule=0.3mm",
+    # to control how rounded corners are
+    "arc=0.3mm",
+    # title color(foreground and background), alignment and font size
+    "coltitle=red!75!black",
+    "colbacktitle=black!8!white",
+    "halign title=right",
+    r"fonttitle=\sffamily\mdseries\scshape\footnotesize",
+]
+FORMAT_OK = ",".join(style_formats)
+FORMAT_ERROR = "colback=red!5!white,colframe=red!75!"
+
 
 # a little mark to put in the continuation line(s) when text is wrapped
 WRAP_MARK = "↳"
