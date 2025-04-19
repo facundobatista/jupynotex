@@ -87,7 +87,7 @@ def test_simple_ok(capsys, save_notebook):
 
     main(notebook_path, '1', {})
     expected = textwrap.dedent("""\
-        \\begin{tcolorbox}[testformat, title=Cell 01]
+        \\begin{tcolorbox}[testformat, breakable, title=Cell 01]
         test cell content up
         \\tcblower
         test cell content down
@@ -105,7 +105,7 @@ def test_simple_only_first(capsys, save_notebook):
     main(notebook_path, '1', {})
 
     expected = textwrap.dedent("""\
-        \\begin{tcolorbox}[testformat, title=Cell 01]
+        \\begin{tcolorbox}[testformat, breakable, title=Cell 01]
         test cell content up
         \\end{tcolorbox}
 
@@ -125,7 +125,7 @@ def test_simple_error(monkeypatch, capsys, save_notebook):
     outerr = capsys.readouterr()
     out = [line for line in outerr.out.split('\n') if line]
     assert out == [
-        r"\begin{tcolorbox}[testformat, title=ERROR when parsing cell 1]",
+        r"\begin{tcolorbox}[testformat, breakable, title=ERROR when parsing cell 1]",
         "test problem",
         'Please report the issue in',
         'https://github.com/facundobatista/jupynotex/issues/new',
@@ -146,13 +146,13 @@ def test_multiple(capsys, save_notebook):
 
     main(notebook_path, '1-2', {})
     expected = textwrap.dedent("""\
-        \\begin{tcolorbox}[testformat, title=Cell 01]
+        \\begin{tcolorbox}[testformat, breakable, title=Cell 01]
         test cell content up
         \\tcblower
         test cell content down
         \\end{tcolorbox}
 
-        \\begin{tcolorbox}[testformat, title=Cell 02]
+        \\begin{tcolorbox}[testformat, breakable, title=Cell 02]
         test cell content ONLY up
         \\end{tcolorbox}
 
@@ -168,13 +168,13 @@ def test_configurecell_all(capsys, save_notebook):
 
     main(notebook_path, '1-2', {"cells-id-template": "--{number:05d}--"})
     expected = textwrap.dedent("""\
-        \\begin{tcolorbox}[testformat, title=--00001--]
+        \\begin{tcolorbox}[testformat, breakable, title=--00001--]
         test cell content up
         \\tcblower
         test cell content down
         \\end{tcolorbox}
 
-        \\begin{tcolorbox}[testformat, title=--00002--]
+        \\begin{tcolorbox}[testformat, breakable, title=--00002--]
         test cell content ONLY up
         \\end{tcolorbox}
 
@@ -190,13 +190,13 @@ def test_configurecell_only_first(capsys, save_notebook):
 
     main(notebook_path, '1-2', {"first-cell-id-template": "--{number:05d}--"})
     expected = textwrap.dedent("""\
-        \\begin{tcolorbox}[testformat, title=--00001--]
+        \\begin{tcolorbox}[testformat, breakable, title=--00001--]
         test cell content up
         \\tcblower
         test cell content down
         \\end{tcolorbox}
 
-        \\begin{tcolorbox}[testformat, title=Cell 02]
+        \\begin{tcolorbox}[testformat, breakable, title=Cell 02]
         test cell content ONLY up
         \\end{tcolorbox}
 
@@ -213,13 +213,13 @@ def test_configurecell_general_and_first(capsys, save_notebook):
     config = {"first-cell-id-template": "C:{number:02d}", "cells-id-template": "#{number:d}"}
     main(notebook_path, '1-2', config)
     expected = textwrap.dedent("""\
-        \\begin{tcolorbox}[testformat, title=C:01]
+        \\begin{tcolorbox}[testformat, breakable, title=C:01]
         test cell content up
         \\tcblower
         test cell content down
         \\end{tcolorbox}
 
-        \\begin{tcolorbox}[testformat, title=#2]
+        \\begin{tcolorbox}[testformat, breakable, title=#2]
         test cell content ONLY up
         \\end{tcolorbox}
 
@@ -235,7 +235,7 @@ def test_configurecell_using_filename(capsys, save_notebook):
 
     main(notebook_path, '1', {"first-cell-id-template": "{filename}: #{number:d}"})
     expected = textwrap.dedent("""\
-        \\begin{tcolorbox}[testformat, title=testnotebook.ipynb: #1]
+        \\begin{tcolorbox}[testformat, breakable, title=testnotebook.ipynb: #1]
         test cell content up
         \\tcblower
         test cell content down
@@ -253,7 +253,7 @@ def test_title_filename_weirdchars(capsys, save_notebook):
 
     main(notebook_path, '1', {"first-cell-id-template": "{filename}: #{number:d}"})
     expected = textwrap.dedent("""\
-        \\begin{tcolorbox}[testformat, title=with\\_underscore.ipynb: #1]
+        \\begin{tcolorbox}[testformat, breakable, title=with\\_underscore.ipynb: #1]
         test cell content up
         \\tcblower
         test cell content down

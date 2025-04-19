@@ -333,12 +333,13 @@ def main(notebook_path, cells_spec, config_options):
     first_cell_id_template = config_options.get("first-cell-id-template", cells_id_template)
 
     escaped_path_name = latex_escape(notebook_path.name)
+    tcolorbox_begin_template = r"\begin{{tcolorbox}}[{}, breakable, title={}]"
     for cell in cells:
         try:
             src, out = nb.get(cell)
         except Exception as exc:
             title = "ERROR when parsing cell {}".format(cell)
-            print(r"\begin{{tcolorbox}}[{}, title={}]".format(FORMAT_ERROR, title))
+            print(tcolorbox_begin_template.format(FORMAT_ERROR, title))
             print(exc)
             _parts = _process_plain_text(REPORT_MSG.split('\n'))
             print('\n'.join(_parts))
@@ -351,7 +352,7 @@ def main(notebook_path, cells_spec, config_options):
 
         template = first_cell_id_template if cell == 1 else cells_id_template
         title = template.format(number=cell, filename=escaped_path_name)
-        print(r"\begin{{tcolorbox}}[{}, title={}]".format(FORMAT_OK, title))
+        print(tcolorbox_begin_template.format(FORMAT_OK, title))
         print(src)
         if out:
             print(r"\tcblower")
