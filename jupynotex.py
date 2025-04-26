@@ -14,6 +14,7 @@ import sys
 import tempfile
 import textwrap
 import traceback
+from dataclasses import dataclass
 
 # message to help people to report potential problems
 REPORT_MSG = """
@@ -34,7 +35,7 @@ HIGHLIGHTERS = {
 }
 
 # the different formats to be used when error or all ok
-style_formats = [
+_style_formats = [
     # text background color
     "colback=black!2",
     # frame color and width
@@ -48,7 +49,7 @@ style_formats = [
     "halign title=right",
     r"fonttitle=\sffamily\mdseries\scshape\footnotesize",
 ]
-FORMAT_OK = ",".join(style_formats)
+FORMAT_OK = ",".join(_style_formats)
 FORMAT_ERROR = "colback=red!5!white,colframe=red!75!"
 
 
@@ -67,6 +68,18 @@ CMDLINE_OPTION_NAMES = {
         "defaults to the value of cells-id-template"
     ),
 }
+
+
+@dataclass(order=True, eq=True, frozen=True)
+class CellSelection:
+    """The selection of a cell.
+
+    Its number (`index`) and an indication if what part is used: (A)ll, only the (I)nput, or only
+    the (O)utput.
+    """
+    index: int
+    partial: str = "a"
+
 
 LATEX_ESCAPE = [
     ("\\", r"\textbackslash"),  # needs to go first, otherwise transforms other escapings
@@ -305,10 +318,17 @@ class Notebook:
         groups = [x.strip() for x in spec.split(',')]
         valid_chars = set('0123456789-,')
         for group in groups:
+            # check if it's a config option
             if '=' in group:
                 k, v = group.split("=", maxsplit=1)
                 options[k] = v
                 continue
+
+            # if there is a partial indication, save it and remove it from the rest of processing
+            partial = "a"
+            if group[-1] in "io":
+                partial = group[-1]
+                group = group[:-1]
 
             if set(group) - valid_chars:
                 raise ValueError(
@@ -321,16 +341,17 @@ class Notebook:
                 if cfrom >= cto:
                     raise ValueError(
                         "Range 'from' need to be smaller than 'to' (got {!r})".format(group))
-                cells.update(range(cfrom, cto + 1))
+                cells.update(CellSelection(x, partial=partial) for x in range(cfrom, cto + 1))
             else:
-                cells.add(int(group))
+                cells.add(CellSelection(int(group), partial=partial))
         cells = sorted(cells)
 
-        if any(x < 1 for x in cells):
+        if any(x.index < 1 for x in cells):
             raise ValueError("Cells need to be >=1")
-        if maxlen < cells[-1]:
-            raise ValueError(
-                f"Notebook loaded of len {maxlen}, smaller than requested cells: {cells}")
+        if len(cells) != len(set(cell.index for cell in cells)):
+            raise ValueError("Mixed different parts indication for the same cell.")
+        if maxlen < cells[-1].index:
+            raise ValueError(f"Notebook loaded of len {maxlen}, smaller than requested cells")
 
         self.cell_options = options
         return cells
@@ -349,9 +370,9 @@ def main(notebook_path, cells_spec, config_options):
     tcolorbox_begin_template = r"\begin{{tcolorbox}}[{}, breakable, title={}]"
     for cell in cells:
         try:
-            src, out = nb.get(cell)
+            src, out = nb.get(cell.index)
         except Exception as exc:
-            title = "ERROR when parsing cell {}".format(cell)
+            title = "ERROR when parsing cell {}".format(cell.index)
             print(tcolorbox_begin_template.format(FORMAT_ERROR, title))
             print(exc)
             _parts = _process_plain_text(REPORT_MSG.split('\n'))
@@ -363,13 +384,21 @@ def main(notebook_path, cells_spec, config_options):
             print(tb, file=sys.stderr)
             continue
 
-        template = first_cell_id_template if cell == 1 else cells_id_template
-        title = template.format(number=cell, filename=escaped_path_name)
+        template = first_cell_id_template if cell.index == 1 else cells_id_template
+        title = template.format(number=cell.index, filename=escaped_path_name)
         print(tcolorbox_begin_template.format(FORMAT_OK, title))
-        print(src)
-        if out:
-            print(r"\tcblower")
+
+        if cell.partial == "i":
+            print(src)
+        elif cell.partial == "o" and out:
             print(out)
+        else:
+            # more usual case, both input and outputs (separated by a line)
+            print(src)
+            if out:
+                print(r"\tcblower")
+                print(out)
+
         print(r"\end{tcolorbox}")
         print()  # extra new line so boxes are separated in the LaTeX PoV
 

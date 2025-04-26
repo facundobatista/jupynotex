@@ -261,3 +261,33 @@ def test_title_filename_weirdchars(capsys, save_notebook):
 
     """)
     assert expected == capsys.readouterr().out
+
+
+def test_partial_only_input(capsys, save_notebook):
+    notebook_path = save_notebook([
+        ("test cell content up", "test cell content down"),
+    ])
+
+    main(notebook_path, '1i', {})
+    expected = textwrap.dedent("""\
+        \\begin{tcolorbox}[testformat, breakable, title=Cell 01]
+        test cell content up
+        \\end{tcolorbox}
+
+    """)
+    assert expected == capsys.readouterr().out
+
+
+def test_partial_only_output(capsys, save_notebook):
+    notebook_path = save_notebook([
+        ("test cell content up", "test cell content down"),
+    ])
+
+    main(notebook_path, '1o', {})
+    expected = textwrap.dedent("""\
+        \\begin{tcolorbox}[testformat, breakable, title=Cell 01]
+        test cell content down
+        \\end{tcolorbox}
+
+    """)
+    assert expected == capsys.readouterr().out

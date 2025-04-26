@@ -47,6 +47,16 @@ Examples:
 
     `\jupynotex[3,12-]{somenote.ipynb}`
 
+If the cell number or the range ends with an `i` or an `o` it will only show the input or output, correspondingly. E.g.:
+
+- include cell 1 completely, only the input of cell 2, and cells 3 and 4
+
+    `\jupynotex[1,2i,3-4]{sample.ipynb}`
+
+- include cell 3 completely, and outputs of 5, 6, and 7
+
+    `\jupynotex[3,5-7o]{sample.ipynb}`
+
 
 ## Configurations available
 
